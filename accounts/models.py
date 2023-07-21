@@ -29,7 +29,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=255)
     registration_date = models.DateField(auto_now_add=True)
     date_of_birth = models.DateField()
-    subscription_type = models.CharField(max_length=200)
+    subscription_type = models.CharField(max_length=200, choices=[('streamer', 'Streamer'), ('viewer', 'Viewer')])
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 

@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streaming details</title>
+    <script>
+        function extractStreamIdFromURL() {
+            const url = window.location.href;
+            const urlParts = url.split('/');
+            return urlParts[urlParts.length - 2];
+        }
+
+        const streamId = extractStreamIdFromURL();
+
+        const socket = new WebSocket(`wss://127.0.0.1:8000/stream/${streamId}/`);
+
+        socket.onopen = function(event) {
+          console.log('WebSocket connection established');
+        };
+
+        socket.onmessage = function(event) {
+          console.log('Websocket message received')
+          const message = JSON.parse(event.data);
+          document.querySelector('#chat-log').value += (event.data.message + '\n');
+
+          const streamContainer = document.getElementById('stream-container');
+          streamContainer.innerHTML += message;
+        };
+
+        socket.onclose = function(event) {
+          console.log('WebSocket connection closed');
+        };
+
+        const sendButton = document.getElementById('send-button');
+        if (sendButton){
+                 sendButton.addEventListener('click', function() {
+            const message = 'Hello, WebSocket Message!'; // Modify the message as needed
+            socket.send(message);
+        });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+          document.querySelector('#chat-message-input').focus();
+          document.querySelector('#chat-message-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#chat-message-submit').click();
+            }
+          };
+
+          document.querySelector('#chat-message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            socket.send(JSON.stringify({
+                'message': message
+            }));
+            messageInputDom.value = '';
+          };
+        });
+
+
+    </script>
+</head>
+<body>
+<div>
+    <h1>Stream Details</h1>
+    <h2>{{ stream.title }}</h2>
+    <p>{{ stream.description }}</p>
+    <p>Status: {% if stream.is_streaming %}Streaming{% else %}Not Streaming{% endif %}</p>
+    {% if stream.is_streaming %}
+        <p>Stream URL: <a href="{{ stream.stream_url }}">{{ stream.stream_url }}</a></p>
+        <a href="{% url 'stop_stream' stream_id=stream.id %}">Stop Stream</a>
+    {% else %}
+        <a href="{% url 'start_stream' %}">Start Stream</a>
+    {% endif %}
+
+    <br>
+    <div id="stream-container"></div>
+
+    <!-- HTML code for the messages container -->
+    <div id="messages-container">
+
+    </div>
+
+    <button id="send-button">Send Data</button>
+    <br>
+
+    <br>
+    <p> CHAT HERE !!!</p>
+    <div>
+        <label for="chat-log"></label><textarea id="chat-log" cols="100" rows="20"></textarea><br>
+        <label for="chat-message-input"></label><input id="chat-message-input" type="text" size="100"><br>
+        <input id="chat-message-submit" type="button" value="Send">
+        {{ room_name|json_script:"room-name" }}
+    </div>
+
+</div>
+</body>
+</html>

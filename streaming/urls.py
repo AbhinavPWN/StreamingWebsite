@@ -14,9 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+
+from streaming import settings
+from streaming.routing import websocket_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-]
+    path('', include('streams.urls')),
+    path('accounts/', include('accounts.urls')),
+    path('chat/', include('chat.urls')),
+    path('video/', include('video.urls')),
+    path('ws/', include(websocket_urlpatterns)),
+] + static(settings.base.MEDIA_URL, document_root=settings.base.MEDIA_ROOT)

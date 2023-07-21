@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Streaming</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+    .custom-video-player {
+        width: 640px;
+        height: 360px;
+    }
+    </style>
+
+</head>
+<body>
+    <video id="video-player" class="custom-video-player" controls></video>
+
+    <script>
+        let videoSocket = new WebSocket('ws://' + window.location.host + '/ws/video/{{ video_id }}/');
+        let videoPlayer = document.getElementById('video-player');
+
+        videoSocket.onmessage = function(e) {
+            let data = e.data;
+            console.log('Received data:', data);
+
+            // Convert the received data into an ArrayBuffer
+            let arrayBuffer = data.arrayBuffer();
+
+            // Create a Blob URL from the ArrayBuffer
+            let videoURL = URL.createObjectURL(arrayBuffer);
+
+            // Set the video player source to the Blob URL
+            videoPlayer.src = videoURL;
+            console.log('Updated video player:', videoPlayer.src);
+
+            {#videoPlayer.src = data;#}
+            {#console.log('Updated video player:', videoPlayer.src);#}
+        };
+
+        videoSocket.onclose = function(e) {
+            console.error('WebSocket connection closed');
+        };
+
+        videoSocket.onopen = function(e) {
+            console.log('WebSocket connection opened');
+            videoSocket.send('start');
+        };
+    </script>
+</body>
+</html>
